@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EduGen & AI Global Tutor</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Inter & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Marked.js for Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; overflow: hidden; background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .loader {
+            border: 3px solid #f3f3f3; border-top: 3px solid #ffffff; border-radius: 50%;
+            width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-flex;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .quiz-option input[type="radio"] { display: none; }
+        .quiz-option { cursor: pointer; transition: all 0.2s; }
+        
+        .markdown-body p { margin-bottom: 0.75em; line-height: 1.6; }
+        .markdown-body strong { color: #1e293b; }
+        .markdown-body ul { margin-left: 1.5rem; margin-bottom: 1em; list-style-type: disc; }
+        .markdown-body ol { margin-left: 1.5rem; margin-bottom: 1em; list-style-type: decimal; }
+        .markdown-body pre { background: #1e293b; color: white; padding: 1rem; border-radius: 0.75rem; overflow-x: auto; margin-bottom: 1em;}
+        .markdown-body code { font-family: monospace; background: #f1f5f9; color: #ef4444; padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-size: 0.875em;}
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: 700; margin-top: 1.5em; margin-bottom: 0.5em; color: #0f172a; }
+        
+        @media print {
+            body { overflow: visible !important; height: auto !important; background-color: white; }
+            #mainScrollArea { overflow: visible !important; }
+            .no-print, aside, header, button, #mobileDrawer, #welcomeScreen, form, #profileModal, #settingsModal { display: none !important; }
+            .tab-section { display: none !important; }
+            .tab-section.print-active { display: block !important; }
+            .print-border { border: 1px solid #e2e8f0 !important; box-shadow: none !important; margin-bottom: 20px; }
+            .print-break-inside-avoid { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 h-screen w-full relative flex">
+
+    <!-- WELCOME SCREEN -->
+    <div id="welcomeScreen" class="fixed inset-0 z-[100] bg-gradient-to-br from-brand-600 to-indigo-900 flex flex-col items-center justify-center text-white p-6 transition-opacity duration-300">
+        <div class="text-center max-w-xl fade-in">
+            <div class="w-24 h-24 bg-white/20 backdrop-blur-md rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-2xl border border-white/30">
+                <i class="fa-solid fa-bolt text-5xl text-yellow-300"></i>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight drop-shadow-lg">EduGen Global</h1>
+            <p class="text-blue-100 text-lg md:text-xl mb-12 font-medium">Platform Belajar Standar Internasional.<br>Dioptimalkan untuk kecepatan dengan UI dinamis.</p>
+            <button onclick="startApp()" class="group relative px-10 py-4 bg-white text-brand-700 font-bold text-xl rounded-full shadow-2xl hover:scale-105 transition-all duration-300 ring-4 ring-white/30">
+                <span>Mulai Belajar Sekarang</span>
+                <i class="fa-solid fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- MOBILE DRAWER -->
+    <div id="mobileDrawer" class="fixed inset-0 z-[60] hidden">
+        <div id="mobileBackdrop" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" onclick="toggleMobileMenu(true)"></div>
+        <aside id="mobileSidebarPanel" class="absolute top-0 left-0 bottom-0 w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl transform transition-transform duration-300 -translate-x-full">
+            <div class="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-950">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-graduation-cap text-brand-500 text-xl mr-3"></i>
+                    <span class="text-white font-bold text-lg tracking-wide">EduGen Global</span>
+                </div>
+                <button onclick="toggleMobileMenu(true)" class="text-slate-400 hover:text-white text-2xl p-1 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <nav class="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+                <button onclick="switchTab('generator')" class="mobile-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl text-white bg-brand-600 shadow-md transition-all">
+                    <i class="fa-solid fa-file-pen w-6 text-center mr-2"></i> <span>Generator Soal</span>
+                </button>
+                <button onclick="switchTab('language')" class="mobile-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-language w-6 text-center mr-2"></i> <span>Bahasa Asing</span>
+                </button>
+                <button onclick="switchTab('speaking')" class="mobile-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-microphone-lines w-6 text-center mr-2"></i> <span>Public Speaking</span>
+                </button>
+                <button onclick="switchTab('tryout')" class="mobile-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-laptop-code w-6 text-center mr-2"></i> <span>Try Out Ujian</span>
+                </button>
+                <button onclick="switchTab('tutor')" class="mobile-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                    <i class="fa-solid fa-camera-retro w-6 text-center mr-2"></i> <span>Asisten PR (Foto)</span>
+                </button>
+            </nav>
+        </aside>
+    </div>
+
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex-shrink-0 hidden md:flex flex-col h-full z-20 shadow-xl no-print">
+        <div class="h-16 flex items-center px-6 border-b border-slate-800 bg-slate-950">
+            <i class="fa-solid fa-graduation-cap text-brand-500 text-2xl mr-3"></i>
+            <span class="text-white font-bold text-xl tracking-wide">EduGen Global</span>
+        </div>
+        <nav class="flex-1 py-6 px-4 space-y-2 overflow-y-auto">
+            <button onclick="switchTab('generator')" data-tab="generator" class="desktop-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl text-white bg-brand-600 shadow-md transition-all">
+                <i class="fa-solid fa-file-pen w-6 text-center mr-2"></i> <span>Generator Soal</span>
+            </button>
+            <button onclick="switchTab('language')" data-tab="language" class="desktop-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-language w-6 text-center mr-2"></i> <span>Bahasa Asing</span>
+            </button>
+            <button onclick="switchTab('speaking')" data-tab="speaking" class="desktop-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-microphone-lines w-6 text-center mr-2"></i> <span>Public Speaking</span>
+            </button>
+            <button onclick="switchTab('tryout')" data-tab="tryout" class="desktop-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-laptop-code w-6 text-center mr-2"></i> <span>Try Out Ujian</span>
+            </button>
+            <button onclick="switchTab('tutor')" data-tab="tutor" class="desktop-nav-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+                <i class="fa-solid fa-camera-retro w-6 text-center mr-2"></i> <span>Asisten PR (Foto)</span>
+            </button>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-slate-50">
+        <!-- HEADER -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-10 shadow-sm no-print">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleMobileMenu()" class="md:hidden text-slate-600 hover:text-brand-600 text-xl w-10 h-10 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 transition-colors">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <h2 id="headerTitle" class="text-xl font-bold text-slate-800 hidden sm:block">Generator Soal Standar Internasional</h2>
+                <h2 id="headerTitleMobile" class="text-lg font-bold text-slate-800 sm:hidden">EduGen</h2>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="openSettingsModal()" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition-colors shadow-sm" title="Pengaturan API Key">
+                    <i class="fa-solid fa-key text-sm"></i>
+                </button>
+
+                <button onclick="openProfileModal()" class="flex items-center gap-3 hover:bg-slate-50 p-1.5 rounded-xl transition-colors border border-transparent cursor-pointer">
+                    <div class="text-right hidden sm:block">
+                        <p id="profileNameDisplay" class="text-sm font-bold text-slate-700 leading-tight">Pengguna</p>
+                        <p class="text-[10px] text-slate-500 font-medium inline-block mt-0.5">
+                            <span id="profileLevelDisplay" class="bg-brand-100 text-brand-700 px-2 py-0.5 rounded-full mr-1">SMA</span>
+                            <span class="text-amber-500 font-bold"><i class="fa-solid fa-star"></i> <span id="profileXpDisplay">0</span> XP</span>
+                        </p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-slate-200 border-2 border-brand-500 overflow-hidden flex items-center justify-center text-slate-500 relative shrink-0 shadow-sm">
+                        <img id="profilePicDisplay" src="" alt="Profile" class="w-full h-full object-cover hidden absolute inset-0 z-10">
+                        <i id="profileIconDisplay" class="fa-solid fa-user absolute z-0"></i>
+                    </div>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN SCROLL AREA -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-20" id="mainScrollArea">
+            
+            <div id="errorBanner" class="hidden no-print mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-xl shadow-sm text-sm text-red-700 flex items-center gap-3 relative">
+                <i class="fa-solid fa-triangle-exclamation text-lg shrink-0"></i>
+                <span id="errorMsg" class="flex-1">Terjadi kesalahan.</span>
+                <button onclick="document.getElementById('errorBanner').classList.add('hidden')" class="text-red-500"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- TAB GENERATOR -->
+            <section id="sec-generator" class="tab-section block print-active">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 h-fit no-print">
+                        <h3 class="font-bold text-slate-800 mb-4"><i class="fa-solid fa-sliders text-brand-500 mr-2"></i> Pengaturan Soal</h3>
+                        <form id="genForm" onsubmit="handleGenerate(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Topik / Mata Pelajaran</label>
+                                <input type="text" id="genSubject" required placeholder="Cth: Quantum Physics, Calculus, Economics" class="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-brand-600 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Rekomendasi Topik (<span id="recomLevelText">SMA</span>):</label>
+                                <div id="recomTagsContainer" class="flex flex-wrap gap-1.5"></div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 pt-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Tipe Soal</label>
+                                    <select id="genType" class="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none bg-slate-50">
+                                        <option value="PG">Pilihan Ganda</option>
+                                        <option value="TrueFalse">Benar / Salah</option>
+                                        <option value="Essay">Essay Analytical</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Jumlah Soal</label>
+                                    <select id="genCount" class="w-full rounded-lg border-slate-300 border p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none bg-slate-50">
+                                        <option value="5">5 Soal (Cepat)</option>
+                                        <option value="10" selected>10 Soal</option>
+                                        <option value="15">15 Soal</option>
+                                        <option value="20">20 Soal (Masif)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" id="btnGenSubmit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-semibold py-3.5 rounded-xl transition-colors flex justify-center items-center gap-2 mt-2 shadow-md">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Buat Soal AI Gemini 3.8
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="lg:col-span-8 flex flex-col gap-4">
+                        <div id="genEmpty" class="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-10 text-center flex-1 flex flex-col items-center justify-center no-print">
+                            <i class="fa-solid fa-robot text-5xl text-slate-200 mb-4"></i>
+                            <h4 class="font-bold text-slate-400">Belum Ada Soal</h4>
+                            <p class="text-slate-400 text-sm mt-1">Pilih pengaturan di samping untuk membuat latihan berstandar internasional.</p>
+                        </div>
+                        <div id="genQuizContainer" class="hidden space-y-4"></div>
+                        <div id="genActionContainer" class="hidden bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-end no-print">
+                            <button onclick="evaluateGenerator()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-8 rounded-lg transition-colors shadow-md">Selesai & Cek Skor</button>
+                        </div>
+                        <div id="genResultBox" class="hidden bg-slate-900 text-white p-6 rounded-2xl shadow-lg flex flex-col sm:flex-row justify-between items-center fade-in gap-4 print-border print:bg-white print:text-black">
+                            <div>
+                                <h3 class="text-xl font-bold text-emerald-400 print:text-emerald-700 mb-1">Hasil Evaluasi Global</h3>
+                                <div class="flex flex-wrap gap-2 text-sm font-medium mt-2">
+                                    <span class="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded border border-emerald-500/30" id="genStatBenar">Benar: 0</span>
+                                    <span class="bg-rose-500/20 text-rose-400 px-3 py-1 rounded border border-rose-500/30" id="genStatSalah">Salah: 0</span>
+                                    <span class="bg-slate-500/20 text-slate-300 px-3 py-1 rounded border border-slate-500/30" id="genStatKosong">Kosong: 0</span>
+                                </div>
+                            </div>
+                            <div class="text-center bg-white/10 rounded-xl px-8 py-4 border border-white/10">
+                                <span class="block text-[10px] uppercase tracking-wider text-slate-400 mb-1">Skor Akhir</span>
+                                <span id="genScore" class="text-4xl font-extrabold text-white">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB BAHASA ASING -->
+            <section id="sec-language" class="tab-section hidden">
+                <div class="max-w-4xl mx-auto mt-2 md:mt-4">
+                    <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold"><i class="fa-solid fa-language"></i></div>
+                            <h3 class="font-bold text-slate-800 text-xl">Latihan Bahasa Asing (Global Standard)</h3>
+                        </div>
+                        <p class="text-sm text-slate-500 mb-6">Pilih bahasa target dan tingkatkan tata bahasa, kosakata, serta percakapan internasional.</p>
+                        
+                        <form onsubmit="handleLangPractice(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Bahasa Target</label>
+                                    <select id="langTarget" class="w-full rounded-xl border-slate-300 border p-3 text-sm font-medium outline-none bg-slate-50">
+                                        <option value="Bahasa Inggris (CEFR Framework)">Bahasa Inggris (IELTS/TOEFL)</option>
+                                        <option value="Bahasa Jepang (JLPT Standard)">Bahasa Jepang (JLPT)</option>
+                                        <option value="Bahasa Mandarin (HSK Standard)">Bahasa Mandarin (HSK)</option>
+                                        <option value="Bahasa Jerman (Goethe Standard)">Bahasa Jerman</option>
+                                        <option value="Bahasa Prancis (DELF Standard)">Bahasa Prancis</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Tingkat Kemampuan</label>
+                                    <select id="langLevel" class="w-full rounded-xl border-slate-300 border p-3 text-sm font-medium outline-none bg-slate-50">
+                                        <option value="Pemula (A1-A2)">Pemula (Basic / A1-A2)</option>
+                                        <option value="Menengah (B1-B2)" selected>Menengah (Intermediate / B1-B2)</option>
+                                        <option value="Lanjut (C1-C2)">Mahir (Advanced / C1-C2)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Fokus Modul</label>
+                                    <select id="langFocus" class="w-full rounded-xl border-slate-300 border p-3 text-sm font-medium outline-none bg-slate-50">
+                                        <option value="Grammar & Vocabulary Correction">Koreksi Tata Bahasa & Kosakata</option>
+                                        <option value="Business & Academic Writing">Penulisan Akademik & Bisnis</option>
+                                        <option value="Interactive Conversation Simulation">Simulasi Percakapan Situasional</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Teks / Soal Latihan Anda</label>
+                                <textarea id="langInput" rows="4" required placeholder="Masukkan kalimat atau paragraf dalam bahasa asing untuk dikoreksi atau dianalisis AI..." class="w-full rounded-xl border-slate-300 border p-4 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50/50"></textarea>
+                            </div>
+                            <button type="submit" id="btnLangSubmit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-8 rounded-xl transition-colors shadow-md w-full sm:w-auto flex items-center justify-center">
+                                Analisis & Beri Masukan
+                            </button>
+                        </form>
+                    </div>
+
+                    <div id="langResult" class="hidden bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 fade-in">
+                        <div class="flex items-center gap-2 text-indigo-600 font-bold mb-4 pb-3 border-b border-slate-100 text-lg">
+                            <i class="fa-solid fa-square-check"></i> Umpan Balik AI Language Coach
+                        </div>
+                        <div id="langContent" class="markdown-body text-slate-700 text-sm md:text-base"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB PUBLIC SPEAKING -->
+            <section id="sec-speaking" class="tab-section hidden">
+                <div class="max-w-4xl mx-auto mt-2 md:mt-4">
+                    <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold"><i class="fa-solid fa-microphone-lines"></i></div>
+                            <h3 class="font-bold text-slate-800 text-xl">Latihan Public Speaking AI Coach</h3>
+                        </div>
+                        <p class="text-sm text-slate-500 mb-6">Evaluasi naskah pidato, presentasi bisnis, atau argumen debat kamu berdasarkan struktur Toastmasters & Standar Retorika Global.</p>
+
+                        <form onsubmit="handleSpeakingPractice(event)" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Konteks Presentasi / Pidato</label>
+                                    <select id="speakContext" class="w-full rounded-xl border-slate-300 border p-3 text-sm font-medium outline-none bg-slate-50">
+                                        <option value="Presentasi Akademik / Sidang">Presentasi Akademik / Sidang</option>
+                                        <option value="Business Pitch / Proposal Work">Business Pitching / Presentasi Kerja</option>
+                                        <option value="Pidato Motivasi / Keynote Speech">Pidato Publik / Keynote</option>
+                                        <option value="Kompetisi Debat Internasional">Kompetisi Debat</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 mb-1">Bahasa Pengantar</label>
+                                    <select id="speakLang" class="w-full rounded-xl border-slate-300 border p-3 text-sm font-medium outline-none bg-slate-50">
+                                        <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                                        <option value="Bahasa Inggris">Bahasa Inggris</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Draf Naskah Presentasi / Transkrip Pidato</label>
+                                <textarea id="speakInput" rows="5" required placeholder="Tempelkan naskah pidato atau poin-poin presentasi kamu di sini..." class="w-full rounded-xl border-slate-300 border p-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50/50"></textarea>
+                            </div>
+                            <button type="submit" id="btnSpeakSubmit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-8 rounded-xl transition-colors shadow-md w-full sm:w-auto flex items-center justify-center">
+                                Evaluasi Retorika & Struktur
+                            </button>
+                        </form>
+                    </div>
+
+                    <div id="speakResult" class="hidden bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 fade-in">
+                        <div class="flex items-center gap-2 text-emerald-600 font-bold mb-4 pb-3 border-b border-slate-100 text-lg">
+                            <i class="fa-solid fa-award"></i> Evaluasi AI Speaking Coach
+                        </div>
+                        <div id="speakContent" class="markdown-body text-slate-700 text-sm md:text-base"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB TRY OUT -->
+            <section id="sec-tryout" class="tab-section hidden h-full flex-col">
+                <div id="toConfigScreen" class="max-w-xl mx-auto w-full bg-white p-8 rounded-2xl shadow-sm border border-slate-200 mt-4">
+                    <div class="text-center mb-6">
+                        <div class="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-brand-600 text-2xl">
+                            <i class="fa-solid fa-laptop-code"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-2xl">Try Out Ujian (CBT)</h3>
+                        <p class="text-sm text-slate-500 mt-1">Simulasi Computer Based Test dengan standar evaluasi ketat.</p>
+                    </div>
+                    <form onsubmit="startTryoutAPI(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Topik Try Out</label>
+                            <input type="text" id="toTopic" required placeholder="Cth: SAT Math, AP Biology, Penalaran UTBK" class="w-full rounded-lg border-slate-300 border p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Jumlah Soal</label>
+                                <select id="toCount" class="w-full rounded-lg border-slate-300 border p-3 text-sm outline-none bg-slate-50 focus:ring-2 focus:ring-brand-500">
+                                    <option value="5">5 Soal</option><option value="10" selected>10 Soal</option><option value="20">20 Soal</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Waktu (Menit)</label>
+                                <input type="number" id="toTime" min="1" max="120" value="15" required class="w-full rounded-lg border-slate-300 border p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition">
+                            </div>
+                        </div>
+                        <button type="submit" id="btnToSubmit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition-colors flex justify-center items-center gap-2 mt-4 shadow-lg">
+                            <i class="fa-solid fa-play mr-2"></i> Mulai Ujian Simulasi
+                        </button>
+                    </form>
+                </div>
+
+                <div id="toExamScreen" class="hidden flex-col lg:flex-row gap-4 h-[calc(100vh-140px)] min-h-[500px] w-full">
+                    <div class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden relative">
+                        <div class="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center shrink-0">
+                            <div class="font-bold text-slate-700 truncate pr-4" id="toSubjectTitle">Subtes</div>
+                            <div class="bg-rose-100 text-rose-700 px-3 md:px-4 py-1.5 rounded-lg font-mono font-bold border border-rose-200 flex items-center gap-2 shrink-0">
+                                <i class="fa-regular fa-clock"></i> <span id="toTimerDisplay">00:00</span>
+                            </div>
+                        </div>
+                        <div class="p-4 md:p-6 flex-1 overflow-y-auto" id="toQuestionArea">
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <div id="toQNumber" class="w-10 h-10 bg-brand-100 text-brand-700 font-bold rounded-xl flex items-center justify-center shrink-0 text-lg border border-brand-200">1</div>
+                                <div class="w-full">
+                                    <p id="toQText" class="font-medium text-slate-800 mb-6 text-base md:text-lg leading-relaxed"></p>
+                                    <div id="toOptionsArea" class="space-y-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-slate-200 flex justify-between items-center bg-slate-50 gap-2 shrink-0">
+                            <button onclick="navTryout(-1)" id="btnToPrev" class="px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-sm font-medium shadow-sm">Sebelumnya</button>
+                            <label class="flex items-center gap-2 cursor-pointer bg-yellow-50 px-4 py-2.5 rounded-lg border border-yellow-200">
+                                <input type="checkbox" id="toFlagCheck" onchange="toggleTryoutFlag()" class="w-4 h-4 text-yellow-500 rounded border-yellow-300">
+                                <span class="text-sm font-bold text-yellow-700">Ragu-ragu</span>
+                            </label>
+                            <button onclick="navTryout(1)" id="btnToNext" class="px-4 py-2.5 bg-brand-600 text-white rounded-lg text-sm font-medium shadow-sm">Selanjutnya</button>
+                        </div>
+                    </div>
+                    <div class="w-full lg:w-72 bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col shrink-0">
+                        <h4 class="font-bold text-sm text-slate-600 mb-4">Navigasi Soal</h4>
+                        <div id="toGridArea" class="grid grid-cols-5 gap-2 flex-1 content-start overflow-y-auto pr-1"></div>
+                        <button onclick="finishTryout(false)" class="w-full mt-4 bg-rose-500 text-white font-bold py-3 rounded-xl shadow text-sm">Akhiri Ujian</button>
+                    </div>
+                </div>
+
+                <div id="toResultScreen" class="hidden max-w-2xl mx-auto w-full bg-white p-8 rounded-2xl shadow-md border border-slate-200 text-center fade-in mt-4">
+                    <i class="fa-solid fa-flag-checkered text-5xl text-brand-500 mb-4"></i>
+                    <h2 class="text-3xl font-extrabold text-slate-800 mb-2">Simulasi Selesai</h2>
+                    <p class="text-slate-500 mb-8 font-medium" id="toEndReason">Disubmit Manual</p>
+                    <div class="grid grid-cols-3 gap-4 mb-8">
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4"><div class="text-3xl font-black text-emerald-600 mb-1" id="toResBenar">0</div><div class="text-xs font-bold text-emerald-800">Benar</div></div>
+                        <div class="bg-rose-50 border border-rose-200 rounded-xl p-4"><div class="text-3xl font-black text-rose-600 mb-1" id="toResSalah">0</div><div class="text-xs font-bold text-rose-800">Salah</div></div>
+                        <div class="bg-slate-100 border border-slate-200 rounded-xl p-4"><div class="text-3xl font-black text-slate-600 mb-1" id="toResKosong">0</div><div class="text-xs font-bold text-slate-800">Kosong</div></div>
+                    </div>
+                    <button onclick="resetTryout()" class="bg-slate-900 text-white font-bold py-3.5 px-8 rounded-xl shadow-md">Coba Ujian Lain</button>
+                </div>
+            </section>
+
+            <!-- TAB TUTOR / PR -->
+            <section id="sec-tutor" class="tab-section hidden">
+                <div class="max-w-4xl mx-auto mt-2 md:mt-4">
+                    <div class="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 mb-6">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center text-lg font-bold"><i class="fa-solid fa-camera-viewfinder"></i></div>
+                            <h3 class="font-bold text-slate-800 text-xl">Asisten PR Vision (Global Standard)</h3>
+                        </div>
+                        <p class="text-sm text-slate-500 mb-6">Foto soal tugasmu untuk dianalisis oleh AI dengan konsep matematika dan sains tingkat lanjut.</p>
+                        <form onsubmit="handlePR(event)">
+                            <div id="prImgPreviewContainer" class="hidden mb-4 relative inline-block">
+                                <img id="prImgPreview" class="h-32 md:h-48 rounded-lg object-contain bg-slate-50 border">
+                                <button type="button" onclick="clearPRImage()" class="absolute -top-3 -right-3 bg-rose-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <textarea id="prInput" rows="4" placeholder="Ketik soal atau deskripsi instruksi..." class="w-full rounded-xl border-slate-300 border p-4 text-sm focus:ring-2 focus:ring-brand-500 outline-none mb-4 bg-slate-50/50"></textarea>
+                            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                                <input type="file" id="prImgInput" accept="image/*" class="hidden" onchange="previewPRImage(event)">
+                                <button type="button" onclick="document.getElementById('prImgInput').click()" class="w-full sm:w-auto text-brand-700 bg-brand-50 hover:bg-brand-100 px-6 py-3.5 rounded-xl font-bold border border-brand-200"><i class="fa-solid fa-camera mr-2"></i> Unggah Gambar</button>
+                                <button type="submit" id="btnPRSubmit" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-8 rounded-xl shadow-md w-full sm:w-auto flex items-center justify-center">Minta Penjelasan AI</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="prResult" class="hidden bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200 fade-in">
+                        <div class="flex items-center gap-2 text-brand-600 font-bold mb-4 pb-3 border-b text-lg"><i class="fa-solid fa-wand-magic-sparkles"></i> Penjelasan AI Tutor</div>
+                        <div id="prContent" class="markdown-body text-slate-700 text-sm md:text-base"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal" class="fixed inset-0 z-[130] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 relative">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <h3 class="font-extrabold text-xl text-slate-800"><i class="fa-solid fa-key text-brand-500 mr-2"></i> Konfigurasi API Key</h3>
+                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-4">
+                <p class="text-xs text-slate-500 leading-relaxed">Masukkan Gemini API Key kamu untuk menjalankan engine <strong class="text-brand-600">gemini-3.8-flash</strong>.</p>
+                <input type="password" id="settingApiKey" placeholder="Tempel API Key di sini (AIzaSy...)" class="w-full rounded-xl border-slate-300 border p-3 text-sm font-medium outline-none focus:border-brand-500">
+                <button onclick="saveSettings()" class="w-full bg-brand-600 text-white font-bold py-3.5 rounded-xl hover:bg-brand-700 shadow-md">Simpan API Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profileModal" class="fixed inset-0 z-[120] bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-8 relative">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b">
+                <h3 class="font-extrabold text-xl text-slate-800">Identitas Siswa</h3>
+                <button onclick="closeProfileModal()" class="text-slate-400 hover:text-rose-500 bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nama Lengkap</label>
+                    <input type="text" id="modalName" placeholder="Contoh: Alex Rivers" class="w-full rounded-xl border p-3 text-sm font-medium outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Umur</label>
+                        <input type="number" id="modalAge" placeholder="Cth: 18" class="w-full rounded-xl border p-3 text-sm font-medium outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Jenjang</label>
+                        <select id="modalLevel" class="w-full rounded-xl border p-3 text-sm font-medium bg-white">
+                            <option value="SD">SD / Elementary</option>
+                            <option value="SMP">SMP / High School</option>
+                            <option value="SMA">SMA / Senior High</option>
+                            <option value="Kuliah">Perguruan Tinggi / University</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="saveProfile()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl shadow-md mt-2">Simpan Profil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const subjectRecommendations = {
+            'SD': ['Basic Math', 'General Science', 'English Literacy', 'Social Studies'],
+            'SMP': ['Algebra & Geometry', 'Biology & Ecosystems', 'Physics & Energy', 'English Grammar'],
+            'SMA': ['Calculus & Derivatives', 'Organic Chemistry', 'Quantum Mechanics', 'Macroeconomics', 'World History'],
+            'Kuliah': ['Advanced Calculus', 'Data Structures & Algorithms', 'Probability & Statistics', 'Microeconomics', 'University Physics']
+        };
+
+        const state = {
+            apiKey: '',
+            profile: { name: 'Alex Rivers', age: 18, level: 'SMA', xp: 0 },
+            gen: { data: [], userAnswers: {}, evaluated: false, type: 'PG' },
+            tryout: { data: [], userAnswers: {}, flagged: {}, currentQ: 0, timer: 0, interval: null },
+            pr: { imageBase64: null, imageMime: null }
+        };
+
+        window.onload = () => {
+            loadSettings();
+            loadProfile();
+            renderRecommendations();
+        };
+
+        function loadSettings() {
+            try {
+                state.apiKey = localStorage.getItem('eduApiKey') || '';
+                document.getElementById('settingApiKey').value = state.apiKey;
+            } catch(e){}
+        }
+
+        function saveSettings() {
+            const key = document.getElementById('settingApiKey').value.trim();
+            if(!key) { alert("Masukkan API Key yang valid."); return; }
+            state.apiKey = key;
+            try { localStorage.setItem('eduApiKey', key); } catch(e){}
+            alert("API Key berhasil disimpan!");
+            closeSettingsModal();
+        }
+
+        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); document.getElementById('settingsModal').classList.add('flex'); }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); document.getElementById('settingsModal').classList.remove('flex'); }
+
+        function startApp() {
+            const welcome = document.getElementById('welcomeScreen');
+            welcome.style.opacity = '0';
+            setTimeout(() => welcome.classList.add('hidden'), 300);
+        }
+
+        function toggleMobileMenu(forceClose = false) {
+            const drawer = document.getElementById('mobileDrawer');
+            const panel = document.getElementById('mobileSidebarPanel');
+            const backdrop = document.getElementById('mobileBackdrop');
+            
+            if (forceClose || !drawer.classList.contains('hidden')) {
+                panel.classList.add('-translate-x-full');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => drawer.classList.add('hidden'), 300);
+            } else {
+                drawer.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('-translate-x-full');
+                    backdrop.classList.remove('opacity-0');
+                }, 10);
+            }
+        }
+
+        function switchTab(tabId) {
+            toggleMobileMenu(true);
+            const desktopBtns = document.querySelectorAll('.desktop-nav-btn');
+            const mobileBtns = document.querySelectorAll('.mobile-nav-btn');
+            const inactiveClass = "w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl hover:bg-slate-800 hover:text-white text-slate-300 transition-all";
+            const activeClass = "w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl text-white bg-brand-600 shadow-md transition-all";
+
+            desktopBtns.forEach(btn => btn.className = `desktop-nav-btn ${inactiveClass}`);
+            mobileBtns.forEach(btn => btn.className = `mobile-nav-btn ${inactiveClass}`);
+            
+            document.querySelectorAll(`button[onclick="switchTab('${tabId}')"]`).forEach(btn => {
+                btn.className = (btn.classList.contains('desktop-nav-btn') ? 'desktop-nav-btn ' : 'mobile-nav-btn ') + activeClass;
+            });
+
+            document.querySelectorAll('.tab-section').forEach(sec => {
+                sec.classList.add('hidden');
+                if (sec.id === 'sec-tryout') sec.classList.remove('flex');
+            });
+            
+            const activeSec = document.getElementById(`sec-${tabId}`);
+            activeSec.classList.remove('hidden');
+            if(tabId === 'tryout') activeSec.classList.add('flex');
+
+            const titles = { 
+                'generator': 'Generator Soal Standar Internasional', 
+                'language': 'Latihan Bahasa Asing (Global Standard)', 
+                'speaking': 'Public Speaking AI Coach', 
+                'tryout': 'Try Out Ujian (CBT)', 
+                'tutor': 'Asisten PR Vision' 
+            };
+            document.getElementById('headerTitle').textContent = titles[tabId];
+            document.getElementById('mainScrollArea').scrollTop = 0;
+        }
+
+        function loadProfile() {
+            try {
+                state.profile.name = localStorage.getItem('eduName') || 'Alex Rivers';
+                state.profile.level = localStorage.getItem('eduLevel') || 'SMA';
+                state.profile.xp = parseInt(localStorage.getItem('eduXp')) || 0;
+                updateProfileUI();
+            } catch(e){}
+        }
+
+        function saveProfile() {
+            state.profile.name = document.getElementById('modalName').value.trim() || 'Pengguna';
+            state.profile.level = document.getElementById('modalLevel').value;
+            try {
+                localStorage.setItem('eduName', state.profile.name);
+                localStorage.setItem('eduLevel', state.profile.level);
+            } catch(e) {}
+            updateProfileUI();
+            renderRecommendations();
+            closeProfileModal();
+        }
+
+        function addXP(amount) {
+            state.profile.xp += amount;
+            try { localStorage.setItem('eduXp', state.profile.xp); } catch(e){}
+            document.getElementById('profileXpDisplay').textContent = state.profile.xp;
+        }
+
+        function updateProfileUI() {
+            document.getElementById('profileNameDisplay').textContent = state.profile.name;
+            document.getElementById('profileLevelDisplay').textContent = state.profile.level;
+            document.getElementById('profileXpDisplay').textContent = state.profile.xp;
+            document.getElementById('modalName').value = state.profile.name;
+            document.getElementById('modalLevel').value = state.profile.level;
+        }
+
+        function openProfileModal() { document.getElementById('profileModal').classList.remove('hidden'); document.getElementById('profileModal').classList.add('flex'); }
+        function closeProfileModal() { document.getElementById('profileModal').classList.add('hidden'); document.getElementById('profileModal').classList.remove('flex'); }
+
+        function renderRecommendations() {
+            const level = state.profile.level || 'SMA';
+            document.getElementById('recomLevelText').textContent = level;
+            const container = document.getElementById('recomTagsContainer');
+            container.innerHTML = '';
+            
+            const recs = subjectRecommendations[level] || subjectRecommendations['SMA'];
+            recs.forEach(subj => {
+                container.insertAdjacentHTML('beforeend', `
+                    <button type="button" onclick="selectSubject('${subj}')" class="text-xs bg-brand-50 hover:bg-brand-100 text-brand-700 font-semibold px-2.5 py-1 rounded-lg border border-brand-200 transition">
+                        + ${subj}
+                    </button>
+                `);
+            });
+        }
+
+        function selectSubject(subj) { document.getElementById('genSubject').value = subj; }
+
+        function showError(msg) {
+            const banner = document.getElementById('errorBanner');
+            document.getElementById('errorMsg').textContent = msg;
+            banner.classList.remove('hidden');
+            setTimeout(() => banner.classList.add('hidden'), 6000);
+        }
+
+        /* --- DYNAMIC LOADING UI SYSTEM --- */
+        function startLoadingState(btnId, texts) {
+            const btn = document.getElementById(btnId);
+            const origHTML = btn.innerHTML;
+            btn.disabled = true;
+            let i = 0;
+            
+            btn.innerHTML = `<span class="loader mr-2"></span> ${texts[0]}`;
+            const interval = setInterval(() => {
+                i = (i + 1) % texts.length;
+                btn.innerHTML = `<span class="loader mr-2"></span> ${texts[i]}`;
+            }, 2500); 
+            
+            return { btn, origHTML, interval };
+        }
+
+        function stopLoadingState(loadState, overrideHTML = null) {
+            clearInterval(loadState.interval);
+            loadState.btn.innerHTML = overrideHTML || loadState.origHTML;
+            loadState.btn.disabled = false;
+        }
+
+        /* ENGINE API GEMINI 3.8 FLASH DENGAN AUTOMATIC RETRY */
+        async function fetchAI(prompt, systemMsg, useJSON, base64 = null, mime = null, retries = 3, delay = 2000) {
+            let key = state.apiKey || localStorage.getItem('eduApiKey');
+            if (!key || key.trim() === '') {
+                openSettingsModal();
+                throw new Error("API Key belum dimasukkan. Silakan klik ikon kunci di header atas untuk memasukkan Gemini API Key.");
+            }
+
+            const modelName = "gemini-3.8-flash";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key.trim()}`;
+            
+            let parts = [{ text: prompt }];
+            if (base64 && mime) {
+                const rawBase64 = base64.includes(',') ? base64.split(',')[1] : base64;
+                parts.push({ inlineData: { mimeType: mime, data: rawBase64 } });
+            }
+
+            const globalStandardInstruction = "Anda adalah Asisten Pendidikan Berstandar Internasional. Berikan analisis kritis, terstruktur, berbasis bukti ilmiah, serta standar pedagogi global terkini (seperti Bloom's Taxonomy, CEFR, Toastmasters Standard).";
+            const fullSystemMsg = `${globalStandardInstruction}\n${systemMsg}\nHarap merespon dalam Bahasa Indonesia yang profesional dan komunikatif.`;
+
+            const payload = {
+                contents: [{ role: "user", parts }],
+                systemInstruction: { parts: [{ text: fullSystemMsg }] }
+            };
+
+            if (useJSON) {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                question: { type: "STRING" },
+                                options: { type: "ARRAY", items: { type: "STRING" } }, 
+                                correctAnswer: { type: "STRING" },
+                                explanation: { type: "STRING" }
+                            },
+                            required: ["question", "options", "correctAnswer", "explanation"]
+                        }
+                    }
+                };
+            }
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const res = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+                    if (res.status === 503 || res.status === 429) {
+                        if (i < retries - 1) {
+                            await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+                            continue;
+                        }
+                    }
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.error?.message || "Gagal menghubungi Google API.");
+                    }
+                    const data = await res.json();
+                    const text = data.candidates[0].content.parts[0].text;
+                    return useJSON ? JSON.parse(text) : text;
+                } catch (err) {
+                    if (i === retries - 1) {
+                        console.error(err);
+                        showError("Server sedang sibuk. Silakan coba klik tombol sekali lagi.");
+                        throw err;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        /* FEATURE: GENERATOR SOAL */
+        async function handleGenerate(e) {
+            e.preventDefault();
+            const loadingTexts = [
+                'Menganalisis topik keilmuan...', 
+                'Menyusun struktur soal & opsi...', 
+                'Merumuskan pembahasan detail...', 
+                'Memvalidasi standar kompetensi...'
+            ];
+            const loadState = startLoadingState('btnGenSubmit', loadingTexts);
+
+            const subject = document.getElementById('genSubject').value;
+            const type = document.getElementById('genType').value;
+            const count = document.getElementById('genCount').value;
+
+            const promptStr = `Buat ${count} soal ${type} standar akademis internasional untuk jenjang ${state.profile.level} mata pelajaran ${subject}.`;
+            const sys = "Output array JSON. Untuk PG, correctAnswer harus identik dengan salah satu pilihan opsi.";
+
+            try {
+                const res = await fetchAI(promptStr, sys, true);
+                if(res) {
+                    state.gen.data = res;
+                    state.gen.type = type;
+                    state.gen.userAnswers = {};
+                    state.gen.evaluated = false;
+                    
+                    document.getElementById('genEmpty').classList.add('hidden');
+                    document.getElementById('genResultBox').classList.add('hidden');
+                    document.getElementById('genQuizContainer').classList.remove('hidden');
+                    document.getElementById('genActionContainer').classList.remove('hidden');
+                    document.getElementById('genActionContainer').classList.add('flex');
+                    renderGenQuiz();
+                }
+            } catch(err){}
+            stopLoadingState(loadState);
+        }
+
+        function renderGenQuiz() {
+            const container = document.getElementById('genQuizContainer');
+            container.innerHTML = '';
+            state.gen.data.forEach((q, idx) => {
+                const isEval = state.gen.evaluated;
+                const uAns = state.gen.userAnswers[idx] || '';
+                let inputHtml = '';
+                
+                if (state.gen.type === 'Essay') {
+                    inputHtml = `<textarea class="w-full mt-4 p-3 rounded-xl border text-sm" rows="3" placeholder="Tulis jawaban..." onchange="setGenAnswer(${idx}, this.value)" ${isEval?'disabled':''}>${uAns}</textarea>`;
+                } else {
+                    inputHtml = `<div class="mt-4 space-y-2">`;
+                    (q.options || []).forEach(opt => {
+                        const isSelected = uAns === opt;
+                        const isCorrect = opt === q.correctAnswer;
+                        let style = "border-slate-200 hover:bg-slate-50";
+                        if (!isEval && isSelected) style = "border-brand-500 bg-brand-50 font-semibold";
+                        if (isEval) {
+                            if (isCorrect) style = "border-emerald-500 bg-emerald-50 font-bold text-emerald-800";
+                            else if (isSelected && !isCorrect) style = "border-rose-300 bg-rose-50 text-rose-500 line-through";
+                        }
+                        inputHtml += `
+                            <label class="quiz-option flex items-center p-3 rounded-xl border bg-white ${style}">
+                                <input type="radio" name="gen-q${idx}" value="${opt}" ${isSelected?'checked':''} ${isEval?'disabled':''} onchange="setGenAnswer(${idx}, '${opt.replace(/'/g, "\\'")}')">
+                                <span class="text-sm">${opt}</span>
+                            </label>
+                        `;
+                    });
+                    inputHtml += `</div>`;
+                }
+
+                let expHtml = isEval ? `<div class="mt-4 p-4 bg-brand-50 rounded-xl text-sm"><div class="font-bold text-brand-800">Pembahasan Standar Global:</div><p class="text-brand-700">${q.explanation}</p></div>` : '';
+
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200">
+                        <div class="flex gap-4">
+                            <span class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center font-bold text-slate-600 text-sm shrink-0">${idx+1}</span>
+                            <div class="flex-1"><p class="font-bold text-slate-800">${q.question}</p>${inputHtml}${expHtml}</div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        function setGenAnswer(idx, ans) {
+            if(state.gen.evaluated) return;
+            state.gen.userAnswers[idx] = ans;
+            if(state.gen.type !== 'Essay') renderGenQuiz();
+        }
+
+        function evaluateGenerator() {
+            state.gen.evaluated = true;
+            let b = 0, s = 0, k = 0;
+            state.gen.data.forEach((q, i) => {
+                const ans = state.gen.userAnswers[i] || '';
+                if (!ans.trim()) k++;
+                else if (state.gen.type === 'Essay' || ans === q.correctAnswer) b++;
+                else s++;
+            });
+
+            document.getElementById('genActionContainer').classList.add('hidden');
+            document.getElementById('genResultBox').classList.remove('hidden');
+            document.getElementById('genStatBenar').textContent = `Benar: ${b}`;
+            document.getElementById('genStatSalah').textContent = `Salah: ${s}`;
+            document.getElementById('genStatKosong').textContent = `Kosong: ${k}`;
+            document.getElementById('genScore').textContent = (b / state.gen.data.length * 100).toFixed(0);
+            if(b > 0) addXP(b * 10);
+            renderGenQuiz();
+        }
+
+        /* FEATURE: LATIHAN BAHASA ASING */
+        async function handleLangPractice(e) {
+            e.preventDefault();
+            const loadState = startLoadingState('btnLangSubmit', [
+                'Mengidentifikasi grammar...', 
+                'Menganalisis sintaksis...', 
+                'Mengevaluasi keluwesan frasa...', 
+                'Menyusun feedback linguistik...'
+            ]);
+
+            const target = document.getElementById('langTarget').value;
+            const level = document.getElementById('langLevel').value;
+            const focus = document.getElementById('langFocus').value;
+            const text = document.getElementById('langInput').value;
+
+            const prompt = `Analisis teks bahasa asing berikut:\n"${text}"\n\nSpesifikasi:\n- Bahasa Target & Standar: ${target}\n- Tingkat Kemampuan: ${level}\n- Fokus Modul: ${focus}\n\nBerikan umpan balik terstruktur dalam format Markdown:\n1. **Koreksi & Versi Alami (Natural Expressions)**\n2. **Analisis Tata Bahasa & Kosakata Kunci**\n3. **Rekomendasi Peningkatan Sesuai Standar Akademik/Bisnis**`;
+            const sys = "Anda adalah instruktur bahasa asing profesional berstandar CEFR/JLPT/HSK.";
+
+            try {
+                const res = await fetchAI(prompt, sys, false);
+                if(res) {
+                    document.getElementById('langContent').innerHTML = marked.parse(res);
+                    document.getElementById('langResult').classList.remove('hidden');
+                    addXP(15);
+                }
+            } catch(err){}
+            stopLoadingState(loadState);
+        }
+
+        /* FEATURE: PUBLIC SPEAKING COACH */
+        async function handleSpeakingPractice(e) {
+            e.preventDefault();
+            const loadState = startLoadingState('btnSpeakSubmit', [
+                'Membaca draf pidato...', 
+                'Mengevaluasi alur argumen...', 
+                'Menganalisis teknik hook...', 
+                'Menyiapkan masukan retorika...'
+            ]);
+
+            const context = document.getElementById('speakContext').value;
+            const lang = document.getElementById('speakLang').value;
+            const text = document.getElementById('speakInput').value;
+
+            const prompt = `Evaluasi naskah pidato/presentasi berikut:\n"${text}"\n\nSpesifikasi:\n- Kontek Acara: ${context}\n- Bahasa Pengantar: ${lang}\n\nBerikan evaluasi mendalam berdasarkan standar Toastmasters & Retorika Internasional dalam format Markdown:\n1. **Struktur Pembukaan, Isi, dan Penutup (Hook & Call to Action)**\n2. **Kekuatan Argumen & Diksi Retoris**\n3. **Saran Intonasi, Penekanan Nada (Emphasis), dan Pace Bicara**\n4. **Versi Naskah yang Disempurnakan**`;
+            const sys = "Anda adalah Pakar Public Speaking & Retorika Internasional.";
+
+            try {
+                const res = await fetchAI(prompt, sys, false);
+                if(res) {
+                    document.getElementById('speakContent').innerHTML = marked.parse(res);
+                    document.getElementById('speakResult').classList.remove('hidden');
+                    addXP(20);
+                }
+            } catch(err){}
+            stopLoadingState(loadState);
+        }
+
+        /* FEATURE: TRY OUT CBT */
+        async function startTryoutAPI(e) {
+            e.preventDefault();
+            const loadState = startLoadingState('btnToSubmit', [
+                'Menghasilkan bank soal...', 
+                'Mengacak distraktor...', 
+                'Menyiapkan timer ujian...', 
+                'Membangun simulasi CBT...'
+            ]);
+
+            const top = document.getElementById('toTopic').value;
+            const count = parseInt(document.getElementById('toCount').value);
+            const mins = parseInt(document.getElementById('toTime').value);
+
+            const prompt = `Buatkan ${count} soal ujian Try Out CBT berstandar global untuk topik "${top}" jenjang ${state.profile.level}.`;
+            const sys = "Output JSON array.";
+
+            try {
+                const res = await fetchAI(prompt, sys, true);
+                if(res) {
+                    state.tryout.data = res;
+                    state.tryout.userAnswers = {};
+                    state.tryout.flagged = {};
+                    state.tryout.currentQ = 0;
+                    state.tryout.timer = mins * 60;
+                    
+                    document.getElementById('toConfigScreen').classList.add('hidden');
+                    document.getElementById('toResultScreen').classList.add('hidden');
+                    document.getElementById('toExamScreen').classList.remove('hidden');
+                    document.getElementById('toExamScreen').classList.add('flex');
+                    document.getElementById('toSubjectTitle').textContent = `Try Out: ${top}`;
+                    
+                    renderTryoutGrid();
+                    renderTryoutQuestion();
+                    startTryoutTimer();
+                }
+            } catch(err){}
+            stopLoadingState(loadState);
+        }
+
+        function renderTryoutGrid() {
+            const grid = document.getElementById('toGridArea');
+            grid.innerHTML = '';
+            state.tryout.data.forEach((_, i) => {
+                const ans = state.tryout.userAnswers[i];
+                const isFlagged = state.tryout.flagged[i];
+                const isActive = state.tryout.currentQ === i;
+                
+                let bg = "bg-white border-slate-300 text-slate-600";
+                if(isActive) bg = "border-brand-500 ring-2 ring-brand-300 font-bold text-brand-700";
+                if(isFlagged) bg += " !bg-yellow-400 !border-yellow-500 !text-yellow-900";
+                else if(ans) bg += " !bg-emerald-500 !border-emerald-600 !text-white";
+
+                grid.insertAdjacentHTML('beforeend', `<button onclick="navTryoutTo(${i})" class="w-10 h-10 border rounded-lg text-sm font-semibold flex items-center justify-center ${bg}">${i+1}</button>`);
+            });
+        }
+
+        function renderTryoutQuestion() {
+            const qIdx = state.tryout.currentQ;
+            const q = state.tryout.data[qIdx];
+            const ans = state.tryout.userAnswers[qIdx];
+            
+            document.getElementById('toQNumber').textContent = qIdx + 1;
+            document.getElementById('toQText').textContent = q.question;
+            const optArea = document.getElementById('toOptionsArea');
+            optArea.innerHTML = '';
+            
+            (q.options || []).forEach(opt => {
+                const isSelected = ans === opt;
+                const style = isSelected ? 'border-brand-500 bg-brand-50 font-semibold' : 'border-slate-200 hover:bg-slate-50';
+                optArea.insertAdjacentHTML('beforeend', `
+                    <label class="quiz-option flex items-center p-4 rounded-xl border bg-white ${style}">
+                        <input type="radio" name="to-q${qIdx}" value="${opt}" ${isSelected?'checked':''} onchange="setTryoutAnswer('${opt.replace(/'/g, "\\'")}')">
+                        <span class="text-sm">${opt}</span>
+                    </label>
+                `);
+            });
+
+            document.getElementById('btnToPrev').disabled = (qIdx === 0);
+            document.getElementById('btnToNext').disabled = (qIdx === state.tryout.data.length - 1);
+            document.getElementById('toFlagCheck').checked = !!state.tryout.flagged[qIdx];
+        }
+
+        function setTryoutAnswer(val) { state.tryout.userAnswers[state.tryout.currentQ] = val; renderTryoutGrid(); renderTryoutQuestion(); }
+        function toggleTryoutFlag() { state.tryout.flagged[state.tryout.currentQ] = !state.tryout.flagged[state.tryout.currentQ]; renderTryoutGrid(); }
+        function navTryoutTo(idx) { state.tryout.currentQ = idx; renderTryoutGrid(); renderTryoutQuestion(); }
+        function navTryout(dir) { const newQ = state.tryout.currentQ + dir; if(newQ >= 0 && newQ < state.tryout.data.length) navTryoutTo(newQ); }
+
+        function startTryoutTimer() {
+            if(state.tryout.interval) clearInterval(state.tryout.interval);
+            const update = () => {
+                const m = Math.floor(state.tryout.timer / 60).toString().padStart(2,'0');
+                const s = (state.tryout.timer % 60).toString().padStart(2,'0');
+                document.getElementById('toTimerDisplay').textContent = `${m}:${s}`;
+            };
+            update();
+            state.tryout.interval = setInterval(() => {
+                state.tryout.timer--;
+                update();
+                if(state.tryout.timer <= 0) finishTryout(true);
+            }, 1000);
+        }
+
+        function finishTryout(isTimeout) {
+            clearInterval(state.tryout.interval);
+            document.getElementById('toExamScreen').classList.add('hidden');
+            document.getElementById('toExamScreen').classList.remove('flex');
+            
+            let b = 0, s = 0, k = 0;
+            state.tryout.data.forEach((q, i) => {
+                const ans = state.tryout.userAnswers[i];
+                if (!ans) k++;
+                else if (ans === q.correctAnswer) b++;
+                else s++;
+            });
+
+            document.getElementById('toEndReason').textContent = isTimeout ? 'Waktu Ujian Habis!' : 'Disubmit Manual.';
+            document.getElementById('toResBenar').textContent = b;
+            document.getElementById('toResSalah').textContent = s;
+            document.getElementById('toResKosong').textContent = k;
+            if(b > 0) addXP(b * 20);
+            document.getElementById('toResultScreen').classList.remove('hidden');
+        }
+
+        function resetTryout() {
+            document.getElementById('toResultScreen').classList.add('hidden');
+            document.getElementById('toConfigScreen').classList.remove('hidden');
+        }
+
+        /* FEATURE: ASISTEN PR VISION */
+        function previewPRImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            state.pr.imageMime = file.type;
+            const r = new FileReader();
+            r.onload = ev => {
+                state.pr.imageBase64 = ev.target.result;
+                document.getElementById('prImgPreview').src = ev.target.result;
+                document.getElementById('prImgPreviewContainer').classList.remove('hidden');
+            };
+            r.readAsDataURL(file);
+        }
+
+        function clearPRImage() {
+            state.pr.imageBase64 = null; state.pr.imageMime = null;
+            document.getElementById('prImgInput').value = '';
+            document.getElementById('prImgPreviewContainer').classList.add('hidden');
+        }
+
+        async function handlePR(e) {
+            e.preventDefault();
+            const text = document.getElementById('prInput').value.trim();
+            if(!text && !state.pr.imageBase64) return;
+
+            const loadState = startLoadingState('btnPRSubmit', [
+                'Menganalisis gambar...', 
+                'Mengekstraksi teks & rumus...', 
+                'Memecahkan logika masalah...', 
+                'Menyusun penjelasan langkah...'
+            ]);
+
+            const sys = "Anda AI Tutor Internasional. Selesaikan soal dengan pendekatan akademis komprehensif.";
+            const prompt = text || "Tolong selesaikan dan jelaskan konsep ilmiah soal ini.";
+
+            try {
+                const res = await fetchAI(prompt, sys, false, state.pr.imageBase64, state.pr.imageMime);
+                if(res) {
+                    document.getElementById('prContent').innerHTML = marked.parse(res);
+                    document.getElementById('prResult').classList.remove('hidden');
+                    addXP(10);
+                }
+            } catch(err){}
+            stopLoadingState(loadState);
+        }
+    </script>
+</body>
+</html>
